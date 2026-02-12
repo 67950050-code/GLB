@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GLB to Base64 変換</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        .url-input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover { background: #0056b3; }
+        .output {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #007bff;
+            border-radius: 4px;
+            word-break: break-all;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .copy-btn {
+            background: #28a745;
+            margin-top: 10px;
+            padding: 8px 15px;
+        }
+        .copy-btn:hover { background: #218838; }
+        .status { margin: 10px 0; font-weight: bold; }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .loading { color: #ffc107; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📦 GLB to Base64 変換ツール</h1>
+        
+        <div>
+            <label for="urlInput">jsDelivr CDN URL:</label>
+            <input 
+                type="text" 
+                id="urlInput" 
+                class="url-input"
+                value="https://cdn.jsdelivr.net/gh/67950050-code/GLB@main/character.glb"
+                placeholder="GLBファイルのURLを入力"
+            >
+        </div>
+
+        <button onclick="convertToBase64()">🔄 Base64に変換</button>
+
+        <div class="status" id="status"></div>
+
+        <div id="output" class="output" style="display:none;">
+            <div id="base64Output"></div>
+            <button class="copy-btn" onclick="copyToClipboard()">📋 コピー</button>
+        </div>
+    </div>
+
+    <script>
+        async function convertToBase64() {
+            const url = document.getElementById('urlInput').value;
+            const statusEl = document.getElementById('status');
+            const outputEl = document.getElementById('output');
+            const base64El = document.getElementById('base64Output');
+
+            if (!url) {
+                statusEl.innerHTML = '<span class="error">❌ URLを入力してください</span>';
+                return;
+            }
+
+            statusEl.innerHTML = '<span class="loading">⏳ 変換中...</span>';
+            outputEl.style.display = 'none';
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const blob = await response.blob();
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const base64String = e.target.result.split(',')[1];
+                    base64El.textContent = base64String;
+                    outputEl.style.display = 'block';
+                    statusEl.innerHTML = `<span class="success">✅ 変換完了! (${Math.round(base64String.length / 1024)}KB)</span>`;
+                    
+                    // JavaScriptコードの例も表示
+                    console.log('Base64 string:', base64String);
+                };
+
+                reader.readAsDataURL(blob);
+            } catch (error) {
+                statusEl.innerHTML = `<span class="error">❌ エラー: ${error.message}</span>`;
+            }
+        }
+
+        function copyToClipboard() {
+            const text = document.getElementById('base64Output').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ コピーしました!');
+            });
+        }
+    </script>
+</body>
+</html>
